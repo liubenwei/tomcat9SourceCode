@@ -552,6 +552,7 @@ public class Catalina {
     protected void parseServerXml(boolean start) {
         // Set configuration source
         ConfigFileLoader.setSource(new CatalinaBaseConfigurationSource(Bootstrap.getCatalinaBaseFile(), getConfigFile()));
+        //file为 server.xml
         File file = configFile();
 
         if (useGeneratedCode && !Digester.isGeneratedCodeLoaderSet()) {
@@ -689,6 +690,7 @@ public class Catalina {
 
 
     /**
+     * 创建一个server实例
      * Start a new server instance.
      */
     public void load() {
@@ -699,13 +701,20 @@ public class Catalina {
         loaded = true;
 
         long t1 = System.nanoTime();
-
+        //检查临时目录 将会在tomcat10移除
         initDirs();
 
         // Before digester - it may be needed
         initNaming();
 
         // Parse main server.xml
+        //解析server.xml，同时设置this.server(Server组件，实现类是org.apache.catalina.core.StandardServer)
+        //创建一个Digester对象（Digester对象的作用就是解析server.xml配置文件，
+        //这边会先加载conf/server.xml文件，找不到的话会尝试加载server-embed.xml这个配置文件）
+        //解析完成后生成org.apache.catalina.core.StandardServer、org.apache.catalina.core.StandardService、org.apache.catalina.connector.Connector、org.apache.catalina.core.StandardEngine、org.apache.catalina.core.StandardHost、org.apache.catalina.core.StandardContext等等一系列对象，
+        //这些对象从前到后前一个包含后一个对象的引用（一对一或一对多的关系）。
+        //最后将StandardServer赋值给Catalina对象的server属性；如果你配置了连接器组件共享的线程池，还会生成StandardThreadExecutor对象。
+        //第二件事就是调用StandardServer的init方法。
         parseServerXml(true);
         Server s = getServer();
         if (s == null) {
